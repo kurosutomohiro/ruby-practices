@@ -99,9 +99,9 @@ def format_time_stamp(current_dir_item)
   half_year_ago = Date.today.prev_month(6).to_s
 
   if File.mtime(current_dir_item).strftime("%Y-%m-%d") < half_year_ago
-    File.mtime(current_dir_item).strftime(" %b %e %Y")
+    File.mtime(current_dir_item).strftime("%_m %e %_5Y")
   else
-    File.mtime(current_dir_item).strftime("%b %e %H:%M")
+    File.mtime(current_dir_item).strftime("%_m %e %H:%M")
   end
 end
 
@@ -109,7 +109,7 @@ def display_l_option(total_block, files_l_option)
   puts "total #{total_block}"
 
   files_l_option.each do |v|
-    puts "#{v[:permission]} #{v[:n_link]} #{v[:owner]}  #{v[:group]} #{v[:size]} #{v[:time_stamp]} #{v[:name]}"
+    puts "#{v[:permission]}  #{v[:n_link]} #{v[:owner]}  #{v[:group]} #{v[:size]} #{v[:time_stamp]} #{v[:name]}"
   end
 end
 
