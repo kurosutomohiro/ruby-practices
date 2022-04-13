@@ -5,6 +5,27 @@ require 'optparse'
 require 'etc'
 require 'date'
 
+PERMISSION = {
+  0 => '---',
+  1 => '--x',
+  2 => '-w-',
+  3 => '-wx',
+  4 => 'r--',
+  5 => 'r-x',
+  6 => 'rx-',
+  7 => 'rwx'
+}.freeze
+
+FILE_TYPE = {
+  'fifo' => 'f',
+  'characterSpecial' => 'c',
+  'directory' => 'd',
+  'blockSpecial' => 'b',
+  'file' => '-',
+  'link' => 'l',
+  'socket' => 's'
+}.freeze
+
 def main
   params = ARGV.getopts('l')
   current_dir_items = Dir.glob('*')
@@ -46,62 +67,40 @@ def format_l_option(current_dir_items)
   end
 
   files_l_option =
-  current_dir_items.map do |current_dir_item| {
-    permission: format_permission(current_dir_item),
-    n_link: File.stat(current_dir_item).nlink,
-    owner: Etc.getpwuid(File.stat(current_dir_item).uid).name,
-    group: Etc.getgrgid(File.stat(current_dir_item).gid).name,
-    size: File.size(current_dir_item).to_s.rjust(5),
-    time_stamp: format_time_stamp(current_dir_item),
-    name: File.basename(current_dir_item),
-    }
-  end
+    current_dir_items.map do |current_dir_item|
+      {
+        permission: format_permission(current_dir_item),
+        n_link: File.stat(current_dir_item).nlink,
+        owner: Etc.getpwuid(File.stat(current_dir_item).uid).name,
+        group: Etc.getgrgid(File.stat(current_dir_item).gid).name,
+        size: File.size(current_dir_item).to_s.rjust(5),
+        time_stamp: format_time_stamp(current_dir_item),
+        name: File.basename(current_dir_item)
+      }
+    end
 
   display_l_option(total_block, files_l_option)
 end
 
 def format_permission(current_dir_item)
-
-  permission_hash = {
-    0 => '---',
-    1 => '--x',
-    2 => '-w-',
-    3 => '-wx',
-    4 => 'r--',
-    5 => 'r-x',
-    6 => 'rx-',
-    7 => 'rwx',
-  }
-
-  file_type = {
-    'fifo' => 'f',
-    'characterSpecial' => 'c',
-    'directory' => 'd',
-    'blockSpecial' => 'b',
-    'file' => '-',
-    'link' => 'l',
-    'socket' => 's',
-  }
-
   current_dir_item_obj = File.stat(current_dir_item)
   file_stat_mode = current_dir_item_obj.mode.to_s(8)
 
-  ftype = file_type[current_dir_item_obj.ftype]
-  permission_owner = permission_hash[file_stat_mode[-3].to_i]
-  permission_group =  permission_hash[file_stat_mode[-2].to_i]
-  permission_user =  permission_hash[file_stat_mode[-1].to_i]
+  ftype = FILE_TYPE[current_dir_item_obj.ftype]
+  permission_owner = PERMISSION[file_stat_mode[-3].to_i]
+  permission_group = PERMISSION[file_stat_mode[-2].to_i]
+  permission_user = PERMISSION[file_stat_mode[-1].to_i]
 
-  permission_str = "#{ftype}#{permission_owner}#{permission_group}#{permission_user}"
-  permission_str
+  "#{ftype}#{permission_owner}#{permission_group}#{permission_user}"
 end
 
 def format_time_stamp(current_dir_item)
   half_year_ago = Date.today.prev_month(6).to_s
 
-  if File.mtime(current_dir_item).strftime("%Y-%m-%d") < half_year_ago
-    File.mtime(current_dir_item).strftime("%_m %e %_5Y")
+  if File.mtime(current_dir_item).strftime('%Y-%m-%d') < half_year_ago
+    File.mtime(current_dir_item).strftime('%_m %e %_5Y')
   else
-    File.mtime(current_dir_item).strftime("%_m %e %H:%M")
+    File.mtime(current_dir_item).strftime('%_m %e %H:%M')
   end
 end
 
