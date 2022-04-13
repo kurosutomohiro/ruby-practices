@@ -2,12 +2,14 @@
 # frozen_string_literal: true
 
 require 'optparse'
+require 'etc'
+require 'date'
 
 def main
-  params = ARGV.getopts('r')
+  params = ARGV.getopts('l')
   current_dir_items = Dir.glob('*')
-  if params['r']
-    format(current_dir_items.reverse)
+  if params['l']
+    format_l_option(current_dir_items)
   else
     format(current_dir_items)
   end
@@ -36,7 +38,81 @@ def format(current_dir_items)
   display(transposed_items)
 end
 
-# 出力
+# lオプション用の整形メソッド
+def format_l_option(current_dir_items)
+  total_block = 0
+  current_dir_items.each do |v|
+    total_block += File::Stat.new(v).blocks
+  end
+
+  files_l_option =
+  current_dir_items.map do |current_dir_item| {
+    permission: format_permission(current_dir_item),
+    n_link: File.stat(current_dir_item).nlink,
+    owner: Etc.getpwuid(File.stat(current_dir_item).uid).name,
+    group: Etc.getgrgid(File.stat(current_dir_item).gid).name,
+    size: File.size(current_dir_item).to_s.rjust(5),
+    time_stamp: format_time_stamp(current_dir_item),
+    name: File.basename(current_dir_item),
+    }
+  end
+
+  display_l_option(total_block, files_l_option)
+end
+
+def format_permission(current_dir_item)
+
+  permission_hash = {
+    0 => '---',
+    1 => '--x',
+    2 => '-w-',
+    3 => '-wx',
+    4 => 'r--',
+    5 => 'r-x',
+    6 => 'rx-',
+    7 => 'rwx',
+  }
+
+  file_type = {
+    'fifo' => 'f',
+    'characterSpecial' => 'c',
+    'directory' => 'd',
+    'blockSpecial' => 'b',
+    'file' => '-',
+    'link' => 'l',
+    'socket' => 's',
+  }
+
+  current_dir_item_obj = File.stat(current_dir_item)
+  file_stat_mode = current_dir_item_obj.mode.to_s(8)
+
+  ftype = file_type[current_dir_item_obj.ftype]
+  permission_owner = permission_hash[file_stat_mode[-3].to_i]
+  permission_group =  permission_hash[file_stat_mode[-2].to_i]
+  permission_user =  permission_hash[file_stat_mode[-1].to_i]
+
+  permission_str = "#{ftype}#{permission_owner}#{permission_group}#{permission_user}"
+  permission_str
+end
+
+def format_time_stamp(current_dir_item)
+  half_year_ago = Date.today.prev_month(6).to_s
+
+  if File.mtime(current_dir_item).strftime("%Y-%m-%d") < half_year_ago
+    File.mtime(current_dir_item).strftime(" %b %e %Y")
+  else
+    File.mtime(current_dir_item).strftime("%b %e %H:%M")
+  end
+end
+
+def display_l_option(total_block, files_l_option)
+  puts "total #{total_block}"
+
+  files_l_option.each do |v|
+    puts "#{v[:permission]} #{v[:n_link]} #{v[:owner]}  #{v[:group]} #{v[:size]} #{v[:time_stamp]} #{v[:name]}"
+  end
+end
+
 def display(transposed_items)
   transposed_items.each do |items|
     puts items.join('')
