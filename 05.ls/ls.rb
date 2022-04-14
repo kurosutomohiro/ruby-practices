@@ -17,7 +17,7 @@ PERMISSION = {
 }.freeze
 
 FILE_TYPE = {
-  'fifo' => 'f',
+  'fifo' => 'p',
   'characterSpecial' => 'c',
   'directory' => 'd',
   'blockSpecial' => 'b',
@@ -63,18 +63,19 @@ end
 def format_l_option(current_dir_items)
   total_block = 0
   current_dir_items.each do |v|
-    total_block += File::Stat.new(v).blocks
+    total_block += File.lstat(v).blocks
   end
 
   files_l_option =
     current_dir_items.map do |current_dir_item|
+      lstat = File.lstat(current_dir_item)
       {
         permission: format_permission(current_dir_item),
-        n_link: File.stat(current_dir_item).nlink,
-        owner: Etc.getpwuid(File.stat(current_dir_item).uid).name,
-        group: Etc.getgrgid(File.stat(current_dir_item).gid).name,
-        size: File.size(current_dir_item).to_s.rjust(5),
-        time_stamp: format_time_stamp(current_dir_item),
+        n_link: lstat.nlink,
+        owner: Etc.getpwuid(lstat.uid).name,
+        group: Etc.getgrgid(lstat.gid).name,
+        size: File.lstat(current_dir_item).size.to_s.rjust(5),
+        time_stamp: format_time_stamp(lstat),
         name: File.basename(current_dir_item)
       }
     end
@@ -83,7 +84,7 @@ def format_l_option(current_dir_items)
 end
 
 def format_permission(current_dir_item)
-  stat = File.stat(current_dir_item)
+  stat = File.lstat(current_dir_item)
   file_stat_mode = stat.mode.to_s(8)
 
   ftype = FILE_TYPE[stat.ftype]
@@ -94,13 +95,13 @@ def format_permission(current_dir_item)
   "#{ftype}#{permission_owner}#{permission_group}#{permission_user}"
 end
 
-def format_time_stamp(current_dir_item)
+def format_time_stamp(lstat)
   half_year_ago = Date.today.prev_month(6).to_s
 
-  if File.mtime(current_dir_item).strftime('%Y-%m-%d') < half_year_ago
-    File.mtime(current_dir_item).strftime('%_m %e %_5Y')
+  if lstat.mtime.strftime('%Y-%m-%d') < half_year_ago
+    lstat.mtime.strftime('%_m %e %_5Y')
   else
-    File.mtime(current_dir_item).strftime('%_m %e %H:%M')
+    lstat.mtime.strftime('%_m %e %H:%M')
   end
 end
 
