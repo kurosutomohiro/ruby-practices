@@ -83,10 +83,10 @@ def format_l_option(current_dir_items)
 end
 
 def format_permission(current_dir_item)
-  current_dir_item_obj = File.stat(current_dir_item)
-  file_stat_mode = current_dir_item_obj.mode.to_s(8)
+  stat = File.stat(current_dir_item)
+  file_stat_mode = stat.mode.to_s(8)
 
-  ftype = FILE_TYPE[current_dir_item_obj.ftype]
+  ftype = FILE_TYPE[stat.ftype]
   permission_owner = PERMISSION[file_stat_mode[-3].to_i]
   permission_group = PERMISSION[file_stat_mode[-2].to_i]
   permission_user = PERMISSION[file_stat_mode[-1].to_i]
