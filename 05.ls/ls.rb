@@ -4,6 +4,7 @@
 require 'optparse'
 require 'etc'
 require 'date'
+require 'debug'
 
 PERMISSION = {
   0 => '---',
@@ -61,10 +62,7 @@ end
 
 # lオプション用の整形メソッド
 def format_l_option(current_dir_items)
-  total_block = 0
-  current_dir_items.each do |v|
-    total_block += File.lstat(v).blocks
-  end
+  total_block = current_dir_items.sum { |v| File.lstat(v).blocks }
 
   files_l_option =
     current_dir_items.map do |current_dir_item|
@@ -96,9 +94,9 @@ def format_permission(current_dir_item)
 end
 
 def format_time_stamp(lstat)
-  half_year_ago = Date.today.prev_month(6).to_s
+  half_year_ago = Date.today.prev_month(6).to_time
 
-  if lstat.mtime.strftime('%Y-%m-%d') < half_year_ago
+  if lstat.mtime < half_year_ago
     lstat.mtime.strftime('%_m %e %_5Y')
   else
     lstat.mtime.strftime('%_m %e %H:%M')
