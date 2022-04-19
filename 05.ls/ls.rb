@@ -27,13 +27,29 @@ FILE_TYPE = {
   'socket' => 's'
 }.freeze
 
+# ハッシュからどれか来た時 以下を参考にする
+# ftype = FILE_TYPE[stat.ftype]
+# まずはa,rオプションが同時に指定された時をやってみる
+
 def main
-  params = ARGV.getopts('l')
+  params = ARGV.getopts('a', 'r', 'l')
   current_dir_items = Dir.glob('*')
+  p params
+  
+  if params['a']
+    current_dir_items = Dir.glob('*', File::FNM_DOTMATCH)
+  end
+
+  if params['r']
+    current_dir_items = current_dir_items.reverse
+  end
+
   if params['l']
     format_l_option(current_dir_items)
-  else
-    format(current_dir_items)
+  end
+
+  unless params['l']
+  format(current_dir_items)
   end
 end
 
