@@ -28,8 +28,17 @@ FILE_TYPE = {
 }.freeze
 
 def main
-  params = ARGV.getopts('l')
+  params = ARGV.getopts('a', 'r', 'l')
   current_dir_items = Dir.glob('*')
+
+  if params['a']
+    current_dir_items = Dir.glob('*', File::FNM_DOTMATCH)
+  end
+
+  if params['r']
+    current_dir_items = current_dir_items.reverse
+  end
+
   if params['l']
     format_l_option(current_dir_items)
   else
