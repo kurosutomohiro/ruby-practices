@@ -13,29 +13,27 @@ def main
 
   if file_names.any? && options[:l]
     format_l_option(file_names)
-  elsif file_names.any? # && options.empty?
-    format_normal(file_names)
-  # ファイル指定なし、lオプション
+  elsif file_names.any?
+    format(file_names)
   elsif file_names.empty? && options[:l]
     input = $stdin.readlines
     format_stdin_l_option(input)
-  # ファイル指定なし、オプションなし
-  elsif file_names.empty? # && options.empty?
+  elsif file_names.empty?
     input = $stdin.readlines
     format_stdin(input)
   end
 end
 
-def format_normal(file_names)
+def format(file_names)
   total_line_count = file_names.sum { |file_name| File.read(file_name).count("\n") }.to_s.rjust(4)
-  total_word_cout = file_names.sum { |file_name| File.read(file_name).split(/\s+/).count }.to_s.rjust(4)
+  total_word_cout = file_names.sum { |file_name| File.read(file_name).split(' ').size }.to_s.rjust(4)
   total_byte_count = file_names.sum { |file_name| File.size(file_name) }.to_s.rjust(4)
 
   items =
     file_names.map do |file_name|
       {
         line_count: File.read(file_name).count("\n").to_s.rjust(4),
-        word_count: File.read(file_name).split(/\s+/).count.to_s.rjust(4),
+        word_count: File.read(file_name).split(' ').size.to_s.rjust(4),
         byte_count: File.size(file_name).to_s.rjust(4),
         file: file_name
       }
