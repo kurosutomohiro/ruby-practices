@@ -14,31 +14,18 @@ def main
   file_names = opt.parse!(ARGV)
 
   texts = []
-  file_names.each do |v|
-    texts << File.read(v)
-  end
-
   if file_names.empty?
-    wc_from_stdin(options)
+    texts << $stdin.readlines.join
   else
-    wc_with_file_name(file_names, options, texts)
+    file_names.each do |v|
+      texts << File.read(v)
+    end
   end
+
+  run_wc(file_names, texts, options)
 end
 
-def wc_from_stdin(options)
-  input = $stdin.readlines
-  line_count = input.size
-
-  if options[:l]
-    display_stdin_l_option(line_count)
-  else
-    word_count = input.each.sum { |v| v.split(' ').size }
-    byte_count = input.each.sum(&:bytesize)
-    display_stdin(line_count, word_count, byte_count)
-  end
-end
-
-def wc_with_file_name(file_names, options, texts)
+  def run_wc(file_names, texts, options)
   items =
     texts.map.with_index do |text, i|
       {
@@ -88,6 +75,7 @@ def display_stdin_l_option(line_count)
 end
 
 def display_stdin(line_count, word_count, byte_count)
+  p "標準入力"
   puts "      #{line_count}       #{word_count}      #{byte_count}"
 end
 
