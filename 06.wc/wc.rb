@@ -5,7 +5,7 @@ require 'optparse'
 require 'debug'
 require 'readline'
 
-AJUST_SPACE = 4
+AJUST_SPACE = 8 
 
 def main
   options = {}
@@ -45,38 +45,25 @@ end
     total_byte_count += item[:byte_counts]
   end
 
-  if options[:l]
-    display_l_option(items, total_line_count)
-  else
-    display_normal(items, total_line_count, total_word_count, total_byte_count)
+  items.each_with_index do |item, i|
+    if options[:l]
+      output = [item[:line_counts].to_s.rjust(AJUST_SPACE, " ")]
+    else
+      output = [item[:line_counts].to_s.rjust(AJUST_SPACE, " "), item[:word_counts].to_s.rjust(AJUST_SPACE, " "), item[:byte_counts].to_s.rjust(AJUST_SPACE, " ")]
+    end
+      puts output.join("") + " #{item[:file_names]}"
   end
-end
+    return unless items.size >= 2
 
-def display_normal(items, total_line_count, total_word_count, total_byte_count)
-  items.each do |item|
-    puts "    #{item[:line_counts].to_s.rjust(AJUST_SPACE)}    #{item[:word_counts].to_s.rjust(AJUST_SPACE)}    #{item[:byte_counts].to_s.rjust(AJUST_SPACE)} #{item[:file_names]}"
-  end
-  return unless items.size >= 2
+    total = []
+    if options[:l]
+      total.push(total_line_count.to_s.rjust(AJUST_SPACE, " "))
+    else
+      total.push(total_line_count.to_s.rjust(AJUST_SPACE, " "), total_word_count.to_s.rjust(AJUST_SPACE, " "), total_byte_count.to_s.rjust(AJUST_SPACE, " "))
+    end
+    return unless items.size >= 2
 
-  puts "    #{total_line_count.to_s.rjust(AJUST_SPACE)}    #{total_word_count.to_s.rjust(AJUST_SPACE)}    #{total_byte_count.to_s.rjust(AJUST_SPACE)} total"
-end
-
-def display_l_option(items, total_line_count)
-  items.each do |item|
-    puts "    #{item[:line_counts].to_s.rjust(AJUST_SPACE)} #{item[:file_names]}"
-  end
-  return unless items.size >= 2
-
-  puts "    #{total_line_count} total"
-end
-
-def display_stdin_l_option(line_count)
-  puts "       #{line_count} "
-end
-
-def display_stdin(line_count, word_count, byte_count)
-  p "標準入力"
-  puts "      #{line_count}       #{word_count}      #{byte_count}"
+    puts total.join("") + " total"
 end
 
 main
