@@ -5,7 +5,7 @@ require 'optparse'
 require 'debug'
 require 'readline'
 
-AJUST_SPACE = 8 
+AJUST_SPACE = 8
 
 def main
   options = {}
@@ -25,7 +25,7 @@ def main
   run_wc(file_names, texts, options)
 end
 
-  def run_wc(file_names, texts, options)
+def run_wc(file_names, texts, options)
   items =
     texts.map.with_index do |text, i|
       {
@@ -44,26 +44,30 @@ end
     total_word_count += item[:word_counts]
     total_byte_count += item[:byte_counts]
   end
+  display(items, options, total_line_count, total_byte_count, total_word_count)
+end
 
-  items.each_with_index do |item, i|
-    if options[:l]
-      output = [item[:line_counts].to_s.rjust(AJUST_SPACE, " ")]
-    else
-      output = [item[:line_counts].to_s.rjust(AJUST_SPACE, " "), item[:word_counts].to_s.rjust(AJUST_SPACE, " "), item[:byte_counts].to_s.rjust(AJUST_SPACE, " ")]
-    end
-      puts output.join("") + " #{item[:file_names]}"
+def display(items, options, total_line_count, total_byte_count, total_word_count)
+  items.each do |item|
+    output = if options[:l]
+               [item[:line_counts].to_s.rjust(AJUST_SPACE, ' ')]
+             else
+               [item[:line_counts].to_s.rjust(AJUST_SPACE, ' '), item[:word_counts].to_s.rjust(AJUST_SPACE, ' '),
+                item[:byte_counts].to_s.rjust(AJUST_SPACE, ' ')]
+             end
+    puts output.join('') + " #{item[:file_names]}"
   end
-    return unless items.size >= 2
+  return unless items.size >= 2
 
-    total = []
-    if options[:l]
-      total.push(total_line_count.to_s.rjust(AJUST_SPACE, " "))
-    else
-      total.push(total_line_count.to_s.rjust(AJUST_SPACE, " "), total_word_count.to_s.rjust(AJUST_SPACE, " "), total_byte_count.to_s.rjust(AJUST_SPACE, " "))
-    end
-    return unless items.size >= 2
+  total = []
+  if options[:l]
+    total.push(total_line_count.to_s.rjust(AJUST_SPACE, ' '))
+  else
+    total.push(total_line_count.to_s.rjust(AJUST_SPACE, ' '), total_word_count.to_s.rjust(AJUST_SPACE, ' '), total_byte_count.to_s.rjust(AJUST_SPACE, ' '))
+  end
+  return unless items.size >= 2
 
-    puts total.join("") + " total"
+  puts "#{total.join('')} total"
 end
 
 main
