@@ -22,18 +22,13 @@ def main
     end
   end
 
-  run_wc(file_names, texts, options)
+  calc(file_names, texts, options)
 end
 
-def run_wc(file_names, texts, options)
+def calc(file_names, texts, options)
   items =
     texts.map.with_index do |text, i|
-      {
-        line_counts: text.count("\n"),
-        word_counts: text.split(' ').size,
-        byte_counts: text.size,
-        file_names: file_names[i]
-      }
+      { line_counts: text.count("\n"), word_counts: text.split(' ').size, byte_counts: text.size, file_names: file_names[i] }
     end
 
   total_line_count = 0
@@ -44,28 +39,44 @@ def run_wc(file_names, texts, options)
     total_word_count += item[:word_counts]
     total_byte_count += item[:byte_counts]
   end
-  display(items, options, total_line_count, total_byte_count, total_word_count)
+  format(items, options, total_line_count, total_word_count, total_byte_count)
 end
 
-def display(items, options, total_line_count, total_byte_count, total_word_count)
-  items.each do |item|
-    output = if options[:l]
-               [item[:line_counts].to_s.rjust(AJUST_SPACE, ' ')]
-             else
-               [item[:line_counts].to_s.rjust(AJUST_SPACE, ' '), item[:word_counts].to_s.rjust(AJUST_SPACE, ' '),
-                item[:byte_counts].to_s.rjust(AJUST_SPACE, ' ')]
-             end
-    puts output.join('') + " #{item[:file_names]}"
+def format(items, options, total_line_count, total_word_count, total_byte_count)
+  formatted_items = items.map do |v|
+    {
+      line_counts: v[:line_counts].to_s.rjust(AJUST_SPACE, ' '),
+      word_counts: v[:word_counts].to_s.rjust(AJUST_SPACE, ' '),
+      byte_counts: v[:byte_counts].to_s.rjust(AJUST_SPACE, ' '),
+      file_names: v[:file_names]
+    }
   end
-  return unless items.size >= 2
+
+  total_line_count = total_line_count.to_s.rjust(AJUST_SPACE, ' ')
+  total_word_count = total_word_count.to_s.rjust(AJUST_SPACE, ' ')
+  total_byte_count = total_byte_count.to_s.rjust(AJUST_SPACE, ' ')
+
+  display(formatted_items, options, total_line_count, total_word_count, total_byte_count)
+end
+
+def display(formatted_items, options, total_line_count, total_word_count, total_byte_count)
+  formatted_items.each do |formatted_item|
+    output = if options[:l]
+               [formatted_item[:line_counts]]
+             else
+               [formatted_item[:line_counts], formatted_item[:word_counts], formatted_item[:byte_counts]]
+             end
+    puts output.join('') + " #{formatted_item[:file_names]}"
+  end
+  return unless formatted_items.size >= 2
 
   total = []
   if options[:l]
-    total.push(total_line_count.to_s.rjust(AJUST_SPACE, ' '))
+    total.push(total_line_count)
   else
-    total.push(total_line_count.to_s.rjust(AJUST_SPACE, ' '), total_word_count.to_s.rjust(AJUST_SPACE, ' '), total_byte_count.to_s.rjust(AJUST_SPACE, ' '))
+    total.push(total_line_count, total_word_count, total_byte_count)
   end
-  return unless items.size >= 2
+  return unless formatted_items.size >= 2
 
   puts "#{total.join('')} total"
 end
