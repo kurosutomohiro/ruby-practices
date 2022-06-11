@@ -5,7 +5,7 @@ require 'optparse'
 require 'debug'
 require 'readline'
 
-AJUST_SPACE = 8
+ADJUST_SPACE_SIZE = 8
 
 def main
   options = {}
@@ -13,12 +13,12 @@ def main
   opt.on('-l') { |v| options[:l] = v }
   file_names = opt.parse!(ARGV)
 
-  texts = []
+  texts = 
   if file_names.empty?
-    texts << $stdin.readlines.join
+    [{file_name: '', file_contents: $stdin.readlines.join}]
   else
-    file_names.each do |v|
-      texts << File.read(v)
+    file_names.map do |v|
+      {file_name: v, file_contents: File.read(v)}
     end
   end
 
@@ -27,8 +27,12 @@ end
 
 def calc(file_names, texts, options)
   items =
-    texts.map.with_index do |text, i|
-      { line_counts: text.count("\n"), word_counts: text.split(' ').size, byte_counts: text.size, file_names: file_names[i] }
+    texts.map do |text|
+      {
+        line_counts: text[:file_contents].count("\n"),
+        word_counts: text[:file_contents].split(' ').size,
+        byte_counts: text[:file_contents].size
+      }
     end
 
   total_line_count = 0
@@ -45,16 +49,16 @@ end
 def format(items, options, total_line_count, total_word_count, total_byte_count)
   formatted_items = items.map do |v|
     {
-      line_counts: v[:line_counts].to_s.rjust(AJUST_SPACE, ' '),
-      word_counts: v[:word_counts].to_s.rjust(AJUST_SPACE, ' '),
-      byte_counts: v[:byte_counts].to_s.rjust(AJUST_SPACE, ' '),
+      line_counts: v[:line_counts].to_s.rjust(ADJUST_SPACE_SIZE, ' '),
+      word_counts: v[:word_counts].to_s.rjust(ADJUST_SPACE_SIZE, ' '),
+      byte_counts: v[:byte_counts].to_s.rjust(ADJUST_SPACE_SIZE, ' '),
       file_names: v[:file_names]
     }
   end
 
-  total_line_count = total_line_count.to_s.rjust(AJUST_SPACE, ' ')
-  total_word_count = total_word_count.to_s.rjust(AJUST_SPACE, ' ')
-  total_byte_count = total_byte_count.to_s.rjust(AJUST_SPACE, ' ')
+  total_line_count = total_line_count.to_s.rjust(ADJUST_SPACE_SIZE, ' ')
+  total_word_count = total_word_count.to_s.rjust(ADJUST_SPACE_SIZE, ' ')
+  total_byte_count = total_byte_count.to_s.rjust(ADJUST_SPACE_SIZE, ' ')
 
   display(formatted_items, options, total_line_count, total_word_count, total_byte_count)
 end
@@ -76,7 +80,6 @@ def display(formatted_items, options, total_line_count, total_word_count, total_
   else
     total.push(total_line_count, total_word_count, total_byte_count)
   end
-  return unless formatted_items.size >= 2
 
   puts "#{total.join('')} total"
 end
