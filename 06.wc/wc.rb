@@ -23,7 +23,6 @@ def main
 
   calculated_items = calc(file_names, texts, options)
   formatted_items = format(calculated_items)
-  
   display(formatted_items, options)
 end
 
@@ -59,22 +58,21 @@ def format(calculated_items)
   formatted_items =
   calculated_items.map do |calculated_item|
     calculated_item.transform_values do |v|
-    v.to_s.rjust(ADJUST_SPACE_SIZE, ' ')
+      if v.kind_of?(String)
+        v.ljust(ADJUST_SPACE_SIZE)
+      else
+        v.to_s.rjust(ADJUST_SPACE_SIZE)
+      end
     end
   end
 end
 
 def display(calculated_items, options)
   calculated_items.each do |calculated_item|
-    calculated_item.each_value do |v|
-    end
-  end
-
-  calculated_items.each do |calculated_item|
     if options[:l]
       puts "#{calculated_item[:line_count]}#{calculated_item[:file_name]}"
     else
-      puts "#{calculated_item[:line_count]}#{calculated_item[:word_count]}#{calculated_item[:byte_count]}#{calculated_item[:file_name]}"
+      puts "#{calculated_item[:line_count]}#{calculated_item[:word_count]}#{calculated_item[:byte_count]} #{calculated_item[:file_name]}"
     end
   end
 end
