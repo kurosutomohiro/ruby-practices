@@ -14,10 +14,10 @@ def main
 
   texts =
     if file_names.empty?
-      [{ file_name: '', file_contents: $stdin.readlines.join }]
+      [{ file_name: '', file_content: $stdin.readlines.join }]
     else
       file_names.map do |v|
-        { file_name: v, file_contents: File.read(v) }
+        { file_name: v, file_content: File.read(v) }
       end
     end
 
@@ -30,9 +30,9 @@ def calc(texts)
   items =
     texts.map do |text|
       {
-        line_count: text[:file_contents].count("\n"),
-        word_count: text[:file_contents].split(' ').size,
-        byte_count: text[:file_contents].size,
+        line_count: text[:file_content].count("\n"),
+        word_count: text[:file_content].split(' ').size,
+        byte_count: text[:file_content].size,
         file_name: text[:file_name]
       }
     end
