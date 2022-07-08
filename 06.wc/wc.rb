@@ -10,67 +10,86 @@ def main
   options = {}
   opt = OptionParser.new
   opt.on('-l') { |v| options[:l] = v }
+  opt.on('-w') { |v| options[:w] = v }
+  opt.on('-c') { |v| options[:c] = v }
   file_names = opt.parse!(ARGV)
 
-  texts =
+  file_name_and_contents =
     if file_names.empty?
-      [{ file_name: '', file_content: $stdin.readlines.join }]
+      [{ name: '', contents: $stdin.readlines.join }]
     else
       file_names.map do |v|
-        { file_name: v, file_content: File.read(v) }
+        { name: v, contents: File.read(v) }
       end
     end
 
-  calculated_items = calc(texts)
-  formatted_items = format(calculated_items)
+  calculated_items = calc_wc(file_name_and_contents)
+  formatted_items = calculated_items.map do |calculated_item|
+    add_space(calculated_item)
+  end
+
   display(formatted_items, options)
 end
 
-def calc(texts)
-  items =
-    texts.map do |text|
-      {
-        line_count: text[:file_content].count("\n"),
-        word_count: text[:file_content].split(' ').size,
-        byte_count: text[:file_content].size,
-        file_name: text[:file_name]
-      }
-    end
-
-  return items if items.size <= 1
-
+def calc_wc(file_name_and_contents)
   total_line_count = 0
   total_word_count = 0
   total_byte_count = 0
-  items.each do |item|
-    total_line_count += item[:line_count]
-    total_word_count += item[:word_count]
-    total_byte_count += item[:byte_count]
-  end
 
-  totals = { line_count: total_line_count, word_count: total_word_count, byte_count: total_byte_count, file_name: 'total' }
-  items.push(totals)
+  items = []
+  file_name_and_contents.each_with_index do |file_name_and_content, i|
+    items <<
+      {
+        line_count: file_name_and_content[:contents].count("\n"),
+        word_count: file_name_and_content[:contents].split(' ').size,
+        byte_count: file_name_and_content[:contents].size,
+        file_name: file_name_and_content[:name]
+      }
+    total_line_count += items[i][:line_count]
+    total_byte_count += items[i][:byte_count]
+    total_word_count += items[i][:word_count]
+  end
+  return items if file_name_and_contents.size < 2
+
+  items.push({ line_count: total_line_count, word_count: total_word_count, byte_count: total_byte_count, file_name: 'total' })
+  items
 end
 
-def format(calculated_items)
-  calculated_items.map do |calculated_item|
-    calculated_item.transform_values do |v|
-      if v.is_a?(String)
-        v.ljust(ADJUST_SPACE_SIZE)
-      else
-        v.to_s.rjust(ADJUST_SPACE_SIZE)
-      end
-    end
+def add_space(calculated_item)
+  result = {}
+  %i[line_count word_count byte_count file_name].each do |key|
+    result.store(key, calculated_item[key].to_s.rjust(ADJUST_SPACE_SIZE))
   end
+  result
 end
 
-def display(calculated_items, options)
-  calculated_items.each do |calculated_item|
-    if options[:l]
-      puts "#{calculated_item[:line_count]} #{calculated_item[:file_name]}"
-    else
-      puts "#{calculated_item[:line_count]}#{calculated_item[:word_count]}#{calculated_item[:byte_count]} #{calculated_item[:file_name]}"
-    end
+def store_optionally_elements(formatted_item, options)
+  result = []
+  if options[:l]
+    result << formatted_item[:line_count]
+  end
+
+  if options[:w]
+    result << formatted_item[:word_count]
+  end
+
+  if options[:c]
+    result << formatted_item[:byte_count]
+  end
+
+  if options.empty?
+    result << formatted_item[:line_count]
+    result << formatted_item[:word_count]
+    result << formatted_item[:byte_count]
+  end
+
+  result << formatted_item[:file_name]
+  result.join
+end
+
+def display(formatted_items, options)
+  formatted_items.each do |formatted_item|
+    puts store_optionally_elements(formatted_item, options)
   end
 end
 
