@@ -18,78 +18,62 @@ def main
     if file_names.empty?
       [{ name: '', contents: $stdin.readlines.join }]
     else
-      file_names.map do |v|
-        { name: v, contents: File.read(v) }
+      file_names.map do |file_name|
+        { name: file_name, contents: File.read(file_name) }
       end
     end
 
   calculated_items = calc_wc(file_name_and_contents)
-  formatted_items = calculated_items.map do |calculated_item|
-    add_space(calculated_item)
-  end
-
-  display(formatted_items, options)
+  display(calculated_items, options)
 end
 
 def calc_wc(file_name_and_contents)
   total_line_count = 0
   total_word_count = 0
   total_byte_count = 0
-
   items = []
-  file_name_and_contents.each_with_index do |file_name_and_content, i|
-    items <<
-      {
-        line_count: file_name_and_content[:contents].count("\n"),
-        word_count: file_name_and_content[:contents].split(' ').size,
-        byte_count: file_name_and_content[:contents].size,
-        file_name: file_name_and_content[:name]
-      }
-    total_line_count += items[i][:line_count]
-    total_byte_count += items[i][:byte_count]
-    total_word_count += items[i][:word_count]
-  end
-  return items if file_name_and_contents.size < 2
 
-  items.push({ line_count: total_line_count, word_count: total_word_count, byte_count: total_byte_count, file_name: 'total' })
+  file_name_and_contents.each do |file_name_and_content|
+    file_content = file_name_and_content[:contents]
+    items <<
+      { line_count: file_content.count("\n"), word_count: file_content.split(' ').size, byte_count: file_content.size, file_name: file_name_and_content[:name] }
+    total_line_count += items.last[:line_count]
+    total_byte_count += items.last[:byte_count]
+    total_word_count += items.last[:word_count]
+  end
+
+  if file_name_and_contents.size >= 2
+    items.push({ line_count: total_line_count, word_count: total_word_count, byte_count: total_byte_count, file_name: 'total' })
+  end
+
   items
 end
 
-def add_space(calculated_item)
-  result = {}
-  %i[line_count word_count byte_count file_name].each do |key|
-    result.store(key, calculated_item[key].to_s.rjust(ADJUST_SPACE_SIZE))
-  end
-  result
+def add_space(item)
+  item.to_s.rjust(ADJUST_SPACE_SIZE)
 end
 
-def store_optionally_elements(formatted_item, options)
+def create_row(calculated_item, options)
   result = []
-  if options[:l]
-    result << formatted_item[:line_count]
+  if options[:l] || options.empty?
+    result << add_space(calculated_item[:line_count])
   end
 
-  if options[:w]
-    result << formatted_item[:word_count]
+  if options[:w] || options.empty?
+    result << add_space(calculated_item[:word_count])
   end
 
-  if options[:c]
-    result << formatted_item[:byte_count]
+  if options[:c] || options.empty?
+    result << add_space(calculated_item[:byte_count])
   end
 
-  if options.empty?
-    result << formatted_item[:line_count]
-    result << formatted_item[:word_count]
-    result << formatted_item[:byte_count]
-  end
-
-  result << formatted_item[:file_name]
+  result << " #{calculated_item[:file_name]}"
   result.join
 end
 
-def display(formatted_items, options)
-  formatted_items.each do |formatted_item|
-    puts store_optionally_elements(formatted_item, options)
+def display(calculated_items, options)
+  calculated_items.each do |calculated_item|
+    puts create_row(calculated_item, options)
   end
 end
 
