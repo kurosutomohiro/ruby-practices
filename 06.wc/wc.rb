@@ -28,47 +28,48 @@ def main
 end
 
 def calc_wc(file_name_and_contents)
-  total_line_count = 0
-  total_word_count = 0
-  total_byte_count = 0
+  total = { line_count: 0, word_count: 0, byte_count: 0, file_name: 'total' }
   items = []
 
   file_name_and_contents.each do |file_name_and_content|
     file_content = file_name_and_content[:contents]
-    items <<
-      { line_count: file_content.count("\n"), word_count: file_content.split(' ').size, byte_count: file_content.size, file_name: file_name_and_content[:name] }
-    total_line_count += items.last[:line_count]
-    total_byte_count += items.last[:byte_count]
-    total_word_count += items.last[:word_count]
+    item =
+      {
+        line_count: file_content.count("\n"),
+        word_count: file_content.split(' ').size,
+        byte_count: file_content.size,
+        file_name: file_name_and_content[:name]
+      }
+    items << item
+    total[:line_count] += item[:line_count]
+    total[:byte_count] += item[:byte_count]
+    total[:word_count] += item[:word_count]
   end
 
-  if file_name_and_contents.size >= 2
-    items.push({ line_count: total_line_count, word_count: total_word_count, byte_count: total_byte_count, file_name: 'total' })
-  end
+  items << total if file_name_and_contents.size >= 2
 
   items
 end
 
-def add_space(item)
-  item.to_s.rjust(ADJUST_SPACE_SIZE)
+def format_value(value)
+  value.to_s.rjust(ADJUST_SPACE_SIZE)
 end
 
 def create_row(calculated_item, options)
   result = []
   if options[:l] || options.empty?
-    result << add_space(calculated_item[:line_count])
+    result << format_value(calculated_item[:line_count])
   end
 
   if options[:w] || options.empty?
-    result << add_space(calculated_item[:word_count])
+    result << format_value(calculated_item[:word_count])
   end
 
   if options[:c] || options.empty?
-    result << add_space(calculated_item[:byte_count])
+    result << format_value(calculated_item[:byte_count])
   end
 
-  result << " #{calculated_item[:file_name]}"
-  result.join
+  [*result, " #{calculated_item[:file_name]}"].join
 end
 
 def display(calculated_items, options)
